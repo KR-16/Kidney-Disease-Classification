@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -51,11 +52,18 @@ class Evaluation:
         logger.info(f"Evaluation scores: {scores}")
 
     def log_into_mlflow(self):
-        if not self.config.mlflow_uri:
-            logger.info("No mlflow_uri configured; skipping MLflow logging.")
+        # Prefer the config value; otherwise fall back to the standard
+        # MLFLOW_TRACKING_URI env var (how DagsHub credentials are wired in).
+        tracking_uri = self.config.mlflow_uri or os.getenv("MLFLOW_TRACKING_URI", "")
+        if not tracking_uri:
+            logger.info(
+                "No MLflow tracking URI configured (config.evaluation.mlflow_uri "
+                "or MLFLOW_TRACKING_URI); skipping MLflow logging."
+            )
             return
 
-        mlflow.set_registry_uri(self.config.mlflow_uri)
+        mlflow.set_tracking_uri(tracking_uri)
+        mlflow.set_registry_uri(tracking_uri)
         tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
         with mlflow.start_run():

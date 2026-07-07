@@ -64,8 +64,33 @@ Python **3.12+** is required.
    with one subfolder per class.
 2. Adjust hyperparameters in `params.yaml` (image size, batch size, epochs,
    learning rate, number of classes, augmentation).
-3. (Optional) Set `evaluation.mlflow_uri` in `config/config.yaml` to log runs to a
-   remote MLflow / DagsHub tracking server.
+3. (Optional) Configure MLflow tracking — see below.
+
+## Experiment tracking (MLflow / DagsHub)
+
+The evaluation stage logs params, metrics and the model to MLflow when a tracking
+URI is available. Resolution order:
+
+1. `evaluation.mlflow_uri` in `config/config.yaml` (leave empty to skip), then
+2. the standard `MLFLOW_TRACKING_URI` environment variable.
+
+If neither is set, evaluation still writes `scores.json` and simply skips remote
+logging.
+
+For **DagsHub**, keep credentials out of `config.yaml` and use env vars instead:
+
+```bash
+cp .env.example .env        # then fill in your values
+
+export MLFLOW_TRACKING_URI=https://dagshub.com/<user>/<repo>.mlflow
+export MLFLOW_TRACKING_USERNAME=<your-dagshub-username>
+export MLFLOW_TRACKING_PASSWORD=<your-dagshub-token>
+
+python main.py              # runs (or `dvc repro`) and logs the evaluation run
+```
+
+To inspect runs locally instead, launch the MLflow UI against the default
+`mlruns/` store: `mlflow ui`.
 
 ## Usage
 
