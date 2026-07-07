@@ -1,3 +1,12 @@
+# Project artifacts & run outputs
+artifacts/
+logs/
+*.log
+scores.json
+*.h5
+*.keras
+inputImage.jpg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

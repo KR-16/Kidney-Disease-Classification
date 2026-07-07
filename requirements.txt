@@ -1,19 +1,6 @@
-tensorflow
-pandas
-dvc
-mlflow
-notebook
-numpy
-matplotlib
-seaborn
-python-box
-pyYAML
-tqdm
-ensure
-joblib
-types-PyYAML
-scipy
-Flask
-Flask-Cors
-gdown
+# Runtime dependencies are declared in pyproject.toml ([project.dependencies]).
+# Installing the project in editable mode pulls them in:
 -e .
+
+# Dev/test extra (also available via the `dev` dependency group):
+pytest
