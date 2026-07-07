@@ -1,67 +1,119 @@
 # Kidney Disease Classification
-This repository contains code for classifying kidney disease using machine learning techniques. The dataset used is the "Chronic Kidney Disease" dataset from the UCI Machine Learning Repository.
-# Dataset
-The dataset is available at [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/chronic+kidney+disease). It contains various features related to kidney health and a target variable indicating the presence of chronic kidney disease.
-# Requirements
-To run the code, you need to have the following Python packages installed:
-- pandas
-- numpy
-- scikit-learn
-- matplotlib
-- seaborn
-- imblearn
-You can install these packages using pip:
+
+An end-to-end **deep-learning** pipeline that classifies kidney **CT-scan images**
+(e.g. *Normal* vs *Tumor*) using **VGG16 transfer learning**. The project is built as a
+reproducible MLOps workflow with **DVC** for pipeline orchestration, **MLflow** for
+experiment tracking, and a **Flask** web app for inference.
+
+> **Note:** this repository expects an image dataset (CT scans organized into one
+> subfolder per class), *not* the tabular UCI Chronic Kidney Disease dataset.
+
+## Pipeline
+
+```
+Data Ingestion  ->  Prepare Base Model  ->  Training  ->  Evaluation (MLflow)
+   (gdown)          (VGG16 + head)         (fit)         (scores.json + MLflow)
+```
+
+Each stage is implemented as a component (`src/KidneyDiseaseClassifier/components`)
+driven by a thin pipeline wrapper (`.../pipeline`) and configured centrally through
+`config/config.yaml` + `params.yaml` via the `ConfigurationManager`.
+
+## Project structure
+
+```
+Kidney-Disease-Classification/
+├── config/
+│   └── config.yaml                 # paths & data source per stage
+├── params.yaml                     # model / training hyperparameters
+├── dvc.yaml                        # DVC pipeline (4 stages)
+├── main.py                         # runs all stages sequentially
+├── app.py                          # Flask prediction web app
+├── templates/index.html            # upload + predict UI
+├── src/KidneyDiseaseClassifier/
+│   ├── components/                 # data_ingestion, prepare_base_model,
+│   │                               # model_training, model_evaluation
+│   ├── config/configuration.py     # ConfigurationManager
+│   ├── constants/                  # CONFIG/PARAMS file paths
+│   ├── entity/                     # config dataclasses
+│   ├── pipeline/                   # stage_01..04 + prediction
+│   └── utils/common.py             # yaml/json/bin/image helpers
+├── tests/                          # pytest suite
+└── requirements.txt / pyproject.toml
+```
+
+## Requirements
+
+Runtime dependencies are declared in `pyproject.toml`. Install with either tool:
+
 ```bash
-pip install pandas numpy scikit-learn matplotlib seaborn imblearn
+# with uv (recommended)
+uv sync
+
+# or with pip
+pip install -r requirements.txt
 ```
 
+Python **3.12+** is required.
 
-# Project Structure
-```kidney-disease-classification/
-├── data/             # Directory to store the dataset
-├── src/              # Source code directory
-│   ├── KidneyDiseaseClassifier/  # Main package for kidney disease classification
-│   │   ├── __init__.py
-│   │   ├── config.py          # Configuration file
-│   │   ├── utils/             # Utility functions 
-│   │   │   ├── __init__.py
-│   │   │   ├── common.py       # Common utility functions
-│   │   ├── models/            # Machine learning models
-│   │   │   ├── __init__.py
-│   │   │   ├── model.py        # Model training and evaluation
-│   ├── notebooks/          # Jupyter notebooks for exploration and analysis
-│   │   ├── kidney_disease_classification.ipynb  # Notebook for kidney disease classification
-├── requirements.txt      # List of required packages
-├── README.md             # Project documentation
-└── LICENSE               # License file
+## Configuration
+
+1. Put your dataset zip on Google Drive and set its share link in
+   `config/config.yaml` under `data_ingestion.source_URL`.
+   The archive should extract to `artifacts/data_ingestion/kidney-ct-scan-image/`
+   with one subfolder per class.
+2. Adjust hyperparameters in `params.yaml` (image size, batch size, epochs,
+   learning rate, number of classes, augmentation).
+3. (Optional) Set `evaluation.mlflow_uri` in `config/config.yaml` to log runs to a
+   remote MLflow / DagsHub tracking server.
+
+## Usage
+
+Run the whole training pipeline:
+
+```bash
+python main.py
 ```
-# workflow
-1. Update the config.yaml
-2. Update the secrets.yaml [Optional]
-3. Update the params.yaml
-4. Update the entity
-5. Update the configuration manager in src config
-6. Update the components
-7. Update the pipeline
-8. Update the main.py
-9. Update the dvc.yaml
-10. app.py
 
-# Usage
-1. Clone the repository:
-   ```bash
-   git clone https://www.github.com/KR-16/kidney-disease-classification.git
-   cd kidney-disease-classification
-   ```
-2. Download the dataset from the UCI Machine Learning Repository and place it in the `data` directory.
-3. Run the Jupyter Notebook:
-   ```bash
-   jupyter notebook kidney_disease_classification.ipynb
-   ```
-# License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details
-# Acknowledgments
-- The dataset is provided by the UCI Machine Learning Repository.
-- Thanks to the contributors of the scikit-learn, pandas, and seaborn libraries for their valuable tools and resources.
-# Contact
-For any questions or suggestions, feel free to open an issue or contact me at [keerthirajkv2@gmail.com](mailto:)
+Or run it reproducibly with DVC (only re-runs stages whose inputs changed):
+
+```bash
+dvc repro
+```
+
+Serve the prediction web app:
+
+```bash
+python app.py        # http://localhost:8080
+```
+
+Run the tests:
+
+```bash
+pytest
+```
+
+## Workflow (for contributors)
+
+1. Update `config/config.yaml`
+2. Update `params.yaml`
+3. Update the entity (`entity/__init__.py`)
+4. Update the `ConfigurationManager` (`config/configuration.py`)
+5. Update the components
+6. Update the pipeline
+7. Update `main.py`
+8. Update `dvc.yaml`
+9. Update `app.py`
+
+## License
+
+Licensed under the MIT License — see [LICENSE](LICENSE).
+
+## Acknowledgments
+
+- Built with TensorFlow/Keras, DVC, MLflow, and Flask.
+
+## Contact
+
+Questions or suggestions? Open an issue or reach out at
+[keerthirajkr16@gmail.com](mailto:keerthirajkr16@gmail.com).
